@@ -13,6 +13,12 @@ A high-performance, cross-platform metronome library written in Rust with Python
 
 View a short video [here](https://youtu.be/t-W9WpreLVg).
 
+## Published
+
+The library is available to both rust and python projects at:
+[crates.io](https://crates.io/crates/metronome-rs)
+[PyPi](https://pypi.org/project/metronome-rs/)
+
 ## Features
 
 - **High-Performance Audio**: Built on CPAL for low-latency, cross-platform audio
