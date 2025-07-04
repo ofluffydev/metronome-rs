@@ -9,6 +9,10 @@ A high-performance, cross-platform metronome library written in Rust with Python
 [![Rust](https://img.shields.io/badge/rust-1.80+-orange.svg)](https://www.rust-lang.org)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org)
 
+## Demo video
+
+View a short video [here](https://youtu.be/t-W9WpreLVg).
+
 ## Features
 
 - **High-Performance Audio**: Built on CPAL for low-latency, cross-platform audio
