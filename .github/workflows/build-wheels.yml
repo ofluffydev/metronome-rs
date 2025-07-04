@@ -1,0 +1,70 @@
+name: Build Python Wheels
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install system dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install maturin
+      run: pip install maturin
+
+    - name: Build wheels
+      run: maturin build --release --features python --out dist --find-interpreter
+
+    - name: Test wheel installation
+      run: |
+        pip install --find-links dist metronome-rs --force-reinstall
+        python -c "import metronome_rs; print('Successfully imported metronome_rs')"
+
+    - name: Upload wheels as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: wheels-${{ matrix.os }}
+        path: dist/*.whl
+
+  publish:
+    name: Publish to PyPI
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download all wheels
+      uses: actions/download-artifact@v3
+      with:
+        path: dist
+        pattern: wheels-*
+        merge-multiple: true
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        packages_dir: dist/

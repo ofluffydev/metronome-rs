@@ -1,0 +1,56 @@
+[package]
+name = "metronome-rs"
+version = "1.0.0"
+edition = "2024"
+description = "A metronome library with audio beep functionality"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ofluffydev/metronome-rs"
+
+# Examples
+[[example]]
+name = "simple_beep"
+path = "examples/simple_beep.rs"
+
+[[example]]
+name = "simple_metronome"
+path = "examples/simple_metronome.rs"
+
+[[example]]
+name = "metronome_with_measures"
+path = "examples/metronome_with_measures.rs"
+
+[[example]]
+name = "multiple_metronomes"
+path = "examples/multiple_metronomes.rs"
+
+[[example]]
+name = "various_beeps"
+path = "examples/various_beeps.rs"
+
+[[example]]
+name = "high_level_helpers"
+path = "examples/high_level_helpers.rs"
+
+[[example]]
+name = "practical_usage"
+path = "examples/practical_usage.rs"
+
+[[example]]
+name = "subdivision_demo"
+path = "examples/subdivision_demo.rs"
+
+[[example]]
+name = "subdivision_training"
+path = "examples/subdivision_training.rs"
+
+[features]
+default = []
+python = ["pyo3"]
+
+[dependencies]
+cpal = "0.16.0"
+pyo3 = { version = "0.25.1", features = ["extension-module"], optional = true }
+
+[lib]
+name = "metronome_rs"
+crate-type = ["cdylib", "rlib"]

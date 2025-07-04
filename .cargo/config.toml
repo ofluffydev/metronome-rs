@@ -1,0 +1,5 @@
+# Cargo configuration for metronome-rs
+# Ensure tests run sequentially to avoid audio device conflicts
+
+[alias]
+test-sequential = "test -- --test-threads=1"
