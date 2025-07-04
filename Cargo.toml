@@ -1,6 +1,6 @@
 [package]
 name = "metronome-rs"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2024"
 description = "A metronome library with audio beep functionality"
 license = "MIT OR Apache-2.0"
