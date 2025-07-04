@@ -1,10 +1,12 @@
 [package]
 name = "metronome-rs"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 description = "A metronome library with audio beep functionality"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ofluffydev/metronome-rs"
+keywords = ["metronome", "audio", "beep", "music", "timing"]
+categories = ["multimedia::audio", "multimedia", "api-bindings"]
 
 # Examples
 [[example]]

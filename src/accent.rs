@@ -59,7 +59,8 @@ impl Default for AccentConfig {
 
 impl AccentConfig {
     /// Creates a new accent configuration with basic values (no subdivisions).
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         accent_frequency: f32,
         regular_frequency: f32,
         accent_duration: u64,
@@ -83,7 +84,8 @@ impl AccentConfig {
     }
 
     /// Creates a new accent configuration with subdivision support.
-    pub fn with_subdivisions(
+    #[must_use]
+    pub const fn with_subdivisions(
         accent_frequency: f32,
         regular_frequency: f32,
         subdivisions: u32,
@@ -105,7 +107,8 @@ impl AccentConfig {
     }
 
     /// Creates an accent configuration with a more subtle difference.
-    pub fn subtle() -> Self {
+    #[must_use]
+    pub const fn subtle() -> Self {
         Self {
             accent_frequency: 660.0,  // E5 note (less dramatic than octave)
             regular_frequency: 440.0, // A4 note
@@ -122,7 +125,8 @@ impl AccentConfig {
     }
 
     /// Creates an accent configuration with a very pronounced difference.
-    pub fn strong() -> Self {
+    #[must_use]
+    pub const fn strong() -> Self {
         Self {
             accent_frequency: 1760.0, // A6 note (two octaves higher)
             regular_frequency: 440.0, // A4 note
@@ -139,7 +143,8 @@ impl AccentConfig {
     }
 
     /// Creates an accent configuration with different wave types for accent and regular beats.
-    pub fn with_wave_types(accent_wave: WaveType, regular_wave: WaveType) -> Self {
+    #[must_use]
+    pub const fn with_wave_types(accent_wave: WaveType, regular_wave: WaveType) -> Self {
         Self {
             accent_frequency: 880.0,
             regular_frequency: 440.0,
@@ -156,6 +161,7 @@ impl AccentConfig {
     }
 
     /// Creates an accent configuration where both accent and regular beats use the same wave type.
+    #[must_use]
     pub fn with_wave_type(wave_type: WaveType) -> Self {
         Self {
             accent_frequency: 880.0,
@@ -173,7 +179,8 @@ impl AccentConfig {
     }
 
     /// Creates a strong accent configuration with square waves for a more pronounced effect.
-    pub fn strong_square() -> Self {
+    #[must_use]
+    pub const fn strong_square() -> Self {
         Self {
             accent_frequency: 1760.0,
             regular_frequency: 440.0,
@@ -190,7 +197,8 @@ impl AccentConfig {
     }
 
     /// Creates a subtle accent configuration with triangle waves for a softer sound.
-    pub fn subtle_triangle() -> Self {
+    #[must_use]
+    pub const fn subtle_triangle() -> Self {
         Self {
             accent_frequency: 660.0,
             regular_frequency: 440.0,
@@ -209,7 +217,8 @@ impl AccentConfig {
     // Subdivision-specific presets
 
     /// Creates a configuration with eighth note subdivisions (2 subdivisions per beat).
-    pub fn with_eighth_notes() -> Self {
+    #[must_use]
+    pub const fn with_eighth_notes() -> Self {
         Self {
             accent_frequency: 880.0,
             regular_frequency: 440.0,
@@ -226,7 +235,8 @@ impl AccentConfig {
     }
 
     /// Creates a configuration with sixteenth note subdivisions (4 subdivisions per beat).
-    pub fn with_sixteenth_notes() -> Self {
+    #[must_use]
+    pub const fn with_sixteenth_notes() -> Self {
         Self {
             accent_frequency: 880.0,
             regular_frequency: 440.0,
@@ -243,7 +253,8 @@ impl AccentConfig {
     }
 
     /// Creates a configuration with triplet subdivisions (3 subdivisions per beat).
-    pub fn with_triplets() -> Self {
+    #[must_use]
+    pub const fn with_triplets() -> Self {
         Self {
             accent_frequency: 880.0,
             regular_frequency: 440.0,
@@ -260,7 +271,8 @@ impl AccentConfig {
     }
 
     /// Creates a custom subdivision configuration.
-    pub fn with_custom_subdivisions(
+    #[must_use]
+    pub const fn with_custom_subdivisions(
         subdivisions: u32,
         subdivision_frequency: f32,
         subdivision_volume: f32,
@@ -283,25 +295,29 @@ impl AccentConfig {
     // Builder-style methods for modifying existing configurations
 
     /// Returns a copy of this configuration with the specified number of subdivisions.
-    pub fn set_subdivisions(mut self, subdivisions: u32) -> Self {
+    #[must_use]
+    pub const fn set_subdivisions(mut self, subdivisions: u32) -> Self {
         self.subdivisions = subdivisions;
         self
     }
 
     /// Returns a copy of this configuration with the specified subdivision frequency.
-    pub fn set_subdivision_frequency(mut self, frequency: f32) -> Self {
+    #[must_use]
+    pub const fn set_subdivision_frequency(mut self, frequency: f32) -> Self {
         self.subdivision_frequency = frequency;
         self
     }
 
     /// Returns a copy of this configuration with the specified subdivision volume.
-    pub fn set_subdivision_volume(mut self, volume: f32) -> Self {
+    #[must_use]
+    pub const fn set_subdivision_volume(mut self, volume: f32) -> Self {
         self.subdivision_volume = volume;
         self
     }
 
     /// Returns a copy of this configuration with the specified subdivision wave type.
-    pub fn set_subdivision_wave_type(mut self, wave_type: WaveType) -> Self {
+    #[must_use]
+    pub const fn set_subdivision_wave_type(mut self, wave_type: WaveType) -> Self {
         self.subdivision_wave_type = wave_type;
         self
     }
@@ -309,7 +325,8 @@ impl AccentConfig {
     // Extra subdivision presets for specific use cases
 
     /// Creates a configuration optimized for practicing slow pieces with clear subdivisions.
-    pub fn practice_subdivisions() -> Self {
+    #[must_use]
+    pub const fn practice_subdivisions() -> Self {
         Self {
             accent_frequency: 880.0,
             regular_frequency: 440.0,
@@ -326,7 +343,8 @@ impl AccentConfig {
     }
 
     /// Creates a configuration optimized for fast technical passages.
-    pub fn technical_subdivisions() -> Self {
+    #[must_use]
+    pub const fn technical_subdivisions() -> Self {
         Self {
             accent_frequency: 1046.5,  // C6 - very bright accent
             regular_frequency: 523.25, // C5 - bright regular beats

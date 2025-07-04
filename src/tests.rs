@@ -1,5 +1,5 @@
 #[cfg(test)]
-use crate::{stop_global_metronome, AccentConfig, Metronome};
+use crate::{AccentConfig, Metronome, stop_global_metronome};
 #[cfg(test)]
 use std::thread;
 #[cfg(test)]
@@ -14,7 +14,7 @@ fn test_beep() {
 #[test]
 fn test_metronome_creation() {
     let metronome = Metronome::new(120.0, Some(4)).expect("Failed to create metronome");
-    assert_eq!(metronome.bpm(), 120.0);
+    assert!((metronome.bpm() - 120.0).abs() < f64::EPSILON);
     assert_eq!(metronome.beats_per_measure(), Some(4));
     assert!(!metronome.is_playing());
 }
@@ -37,7 +37,9 @@ fn test_metronome_simple() {
 
 #[test]
 fn test_metronome_with_measures() {
-    println!("Testing metronome with measures (120 BPM, 4 beats per measure) - first beat should be accented");
+    println!(
+        "Testing metronome with measures (120 BPM, 4 beats per measure) - first beat should be accented"
+    );
     let metronome = Metronome::new(120.0, Some(4)).expect("Failed to create metronome");
 
     metronome.start().expect("Failed to start metronome");
@@ -56,8 +58,8 @@ fn test_accent_configuration() {
         .expect("Failed to create metronome with strong accent");
 
     // Test that accent config is properly set
-    assert_eq!(metronome.accent_config().accent_frequency, 1760.0);
-    assert_eq!(metronome.accent_config().regular_frequency, 440.0);
+    assert!((metronome.accent_config().accent_frequency - 1760.0).abs() < f32::EPSILON);
+    assert!((metronome.accent_config().regular_frequency - 440.0).abs() < f32::EPSILON);
     assert_eq!(metronome.accent_config().accent_duration, 200);
     assert_eq!(metronome.accent_config().regular_duration, 80);
 }
@@ -65,14 +67,14 @@ fn test_accent_configuration() {
 #[test]
 fn test_accent_config_presets() {
     let default_config = AccentConfig::default();
-    assert_eq!(default_config.accent_frequency, 880.0);
-    assert_eq!(default_config.regular_frequency, 440.0);
+    assert!((default_config.accent_frequency - 880.0).abs() < f32::EPSILON);
+    assert!((default_config.regular_frequency - 440.0).abs() < f32::EPSILON);
 
     let subtle_config = AccentConfig::subtle();
-    assert_eq!(subtle_config.accent_frequency, 660.0);
+    assert!((subtle_config.accent_frequency - 660.0).abs() < f32::EPSILON);
 
     let strong_config = AccentConfig::strong();
-    assert_eq!(strong_config.accent_frequency, 1760.0);
+    assert!((strong_config.accent_frequency - 1760.0).abs() < f32::EPSILON);
     assert_eq!(strong_config.accent_duration, 200);
 }
 
@@ -225,7 +227,7 @@ fn test_high_level_helper_functions() {
 
 #[test]
 fn test_timed_metronome_functions() {
-    use crate::{play_custom_metronome_for_duration, play_metronome_for_duration, AccentConfig};
+    use crate::{AccentConfig, play_custom_metronome_for_duration, play_metronome_for_duration};
 
     println!("Testing timed metronome functions");
 

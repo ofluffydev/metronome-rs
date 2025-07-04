@@ -1,6 +1,6 @@
 use cpal::{
-    traits::{DeviceTrait, StreamTrait},
     Device, FromSample, Sample, SizedSample, StreamConfig,
+    traits::{DeviceTrait, StreamTrait},
 };
 
 use crate::accent::WaveType;
@@ -36,6 +36,10 @@ use crate::audio::{get_default_host, get_default_output_config, get_default_outp
 ///
 /// play_tone::<f32>(&device, &config.into(), 440.0, 1000).expect("Failed to play tone");
 /// ```
+/// 
+/// # Errors
+/// 
+/// Returns an error if the stream fails to build or play.
 pub fn play_tone<T>(
     device: &Device,
     config: &StreamConfig,
@@ -45,6 +49,7 @@ pub fn play_tone<T>(
 where
     T: SizedSample + FromSample<f32>,
 {
+    #[allow(clippy::cast_precision_loss)]
     let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
@@ -55,12 +60,12 @@ where
         (sample_clock * frequency * 2.0 * std::f32::consts::PI / sample_rate).sin()
     };
 
-    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
     let stream = device.build_output_stream(
         config,
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-            write_data(data, channels, &mut next_value)
+            write_data(data, channels, &mut next_value);
         },
         err_fn,
         None,
@@ -117,17 +122,25 @@ pub fn create_sine_wave_generator(frequency: f32, sample_rate: f32) -> impl FnMu
 }
 
 /// Plays a beep using the default audio device and configuration.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the default device or configuration cannot be obtained, or if playing the beep fails.
 pub fn play_default_beep() -> Result<(), Box<dyn std::error::Error>> {
     let host = get_default_host();
     let device = get_default_output_device(&host)?;
     let config = get_default_output_config(&device)?;
 
-    println!("Default output config: {:?}", config);
+    println!("Default output config: {config:?}");
 
     play_beep_with_config(&device, &config.into())
 }
 
 /// Plays a beep with the specified device and configuration, automatically handling sample format.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the device configuration cannot be obtained or if playing the tone fails.
 pub fn play_beep_with_config(
     device: &Device,
     config: &StreamConfig,
@@ -144,11 +157,19 @@ pub fn play_beep_with_config(
 }
 
 /// Convenience function to play a 440Hz beep for 1 second.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the default device or configuration cannot be obtained, or if playing the beep fails.
 pub fn beep() -> Result<(), Box<dyn std::error::Error>> {
     play_default_beep()
 }
 
 /// Convenience function to play a short beep (250ms) at the specified frequency.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the default device or configuration cannot be obtained, or if playing the beep fails.
 pub fn beep_frequency(frequency: f32) -> Result<(), Box<dyn std::error::Error>> {
     let host = get_default_host();
     let device = get_default_output_device(&host)?;
@@ -158,6 +179,10 @@ pub fn beep_frequency(frequency: f32) -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Plays a beep with full control over frequency and duration.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the device configuration cannot be obtained or if playing the tone fails.
 pub fn play_beep_with_config_and_params(
     device: &Device,
     config: &StreamConfig,
@@ -176,6 +201,10 @@ pub fn play_beep_with_config_and_params(
 }
 
 /// Plays a tone with a specified wave type.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the stream fails to build or play.
 pub fn play_tone_with_wave_type<T>(
     device: &Device,
     config: &StreamConfig,
@@ -186,6 +215,7 @@ pub fn play_tone_with_wave_type<T>(
 where
     T: SizedSample + FromSample<f32>,
 {
+    #[allow(clippy::cast_precision_loss)]
     let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
@@ -206,25 +236,25 @@ where
             }
             WaveType::Sawtooth => {
                 let normalized_phase = (phase / (2.0 * std::f32::consts::PI)) % 1.0;
-                2.0 * normalized_phase - 1.0
+                2.0f32.mul_add(normalized_phase, -1.0)
             }
             WaveType::Triangle => {
                 let normalized_phase = (phase / (2.0 * std::f32::consts::PI)) % 1.0;
                 if normalized_phase < 0.5 {
-                    4.0 * normalized_phase - 1.0
+                    4.0f32.mul_add(normalized_phase, -1.0)
                 } else {
-                    3.0 - 4.0 * normalized_phase
+                    4.0f32.mul_add(-normalized_phase, 3.0)
                 }
             }
         }
     };
 
-    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
     let stream = device.build_output_stream(
         config,
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-            write_data(data, channels, &mut next_value)
+            write_data(data, channels, &mut next_value);
         },
         err_fn,
         None,
@@ -237,6 +267,10 @@ where
 }
 
 /// Plays a beep with full control over frequency, duration, and wave type.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the device configuration cannot be obtained or if playing the tone fails.
 pub fn play_beep_with_wave_type(
     device: &Device,
     config: &StreamConfig,
@@ -262,6 +296,10 @@ pub fn play_beep_with_wave_type(
 }
 
 /// Plays a beep with full control over frequency, duration, wave type, and volume.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the device configuration cannot be obtained or if playing the tone fails.
 pub fn play_beep_with_wave_type_and_volume(
     device: &Device,
     config: &StreamConfig,
@@ -310,6 +348,10 @@ pub fn play_beep_with_wave_type_and_volume(
 }
 
 /// Plays a tone with a specified wave type and volume.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the stream fails to build or play.
 pub fn play_tone_with_wave_type_and_volume<T>(
     device: &Device,
     config: &StreamConfig,
@@ -321,6 +363,7 @@ pub fn play_tone_with_wave_type_and_volume<T>(
 where
     T: SizedSample + FromSample<f32>,
 {
+    #[allow(clippy::cast_precision_loss)]
     let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
     let volume = volume.clamp(0.0, 1.0); // Ensure volume is between 0 and 1
@@ -342,14 +385,14 @@ where
             }
             WaveType::Sawtooth => {
                 let normalized_phase = (phase / (2.0 * std::f32::consts::PI)) % 1.0;
-                2.0 * normalized_phase - 1.0
+                2.0f32.mul_add(normalized_phase, -1.0)
             }
             WaveType::Triangle => {
                 let normalized_phase = (phase / (2.0 * std::f32::consts::PI)) % 1.0;
                 if normalized_phase < 0.5 {
-                    4.0 * normalized_phase - 1.0
+                    4.0f32.mul_add(normalized_phase, -1.0)
                 } else {
-                    3.0 - 4.0 * normalized_phase
+                    4.0f32.mul_add(-normalized_phase, 3.0)
                 }
             }
         };
@@ -357,12 +400,12 @@ where
         base_amplitude * volume // Apply volume scaling
     };
 
-    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
     let stream = device.build_output_stream(
         config,
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-            write_data(data, channels, &mut next_value)
+            write_data(data, channels, &mut next_value);
         },
         err_fn,
         None,

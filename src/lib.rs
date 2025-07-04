@@ -46,6 +46,20 @@
 //! - `metronome` - Metronome implementation with accent support
 //! - `accent` - Accent configuration for metronomes
 
+// Be a perfectionist, no code is good enough!
+#![deny(
+    clippy::all,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::perf,
+    clippy::style,
+    clippy::pedantic,
+    clippy::cargo,
+    clippy::nursery
+)]
+// Allow multiple crate versions as it's out of our control due to transitive dependencies
+#![allow(clippy::multiple_crate_versions)]
+
 pub mod accent;
 pub mod audio;
 pub mod metronome;
@@ -61,6 +75,7 @@ mod tests;
 pub use accent::{AccentConfig, WaveType};
 pub use audio::{get_default_host, get_default_output_config, get_default_output_device};
 pub use metronome::{
+    Metronome,
     get_global_metronome,
     play_custom_metronome_for_duration,
     play_metronome_for_duration,
@@ -76,7 +91,6 @@ pub use metronome::{
     // High-level helper functions
     start_simple_metronome,
     stop_global_metronome,
-    Metronome,
 };
 pub use tone::{
     beep, beep_frequency, create_sine_wave_generator, play_beep_with_config,

@@ -1,7 +1,7 @@
 use cpal::{Device, StreamConfig};
 use std::sync::{
-    atomic::{AtomicBool, AtomicU64, Ordering},
     Arc, Mutex,
+    atomic::{AtomicBool, AtomicU64, Ordering},
 };
 use std::thread;
 use std::time::Duration;
@@ -37,6 +37,10 @@ impl Metronome {
     /// # Returns
     ///
     /// A new metronome instance using the default audio device and configuration.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the default audio device or configuration cannot be obtained.
     pub fn new(
         bpm: f64,
         beats_per_measure: Option<u32>,
@@ -45,7 +49,7 @@ impl Metronome {
         let device = get_default_output_device(&host)?;
         let config = get_default_output_config(&device)?;
 
-        Ok(Metronome {
+        Ok(Self {
             bpm,
             beats_per_measure,
             is_playing: Arc::new(AtomicBool::new(false)),
@@ -59,6 +63,16 @@ impl Metronome {
     }
 
     /// Creates a new metronome with custom accent configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `bpm` - Beats per minute (e.g., 120.0)
+    /// * `beats_per_measure` - Optional number of beats per measure for accented first beat
+    /// * `accent_config` - Custom accent configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the default audio device or configuration cannot be obtained.
     pub fn new_with_accent(
         bpm: f64,
         beats_per_measure: Option<u32>,
@@ -68,7 +82,7 @@ impl Metronome {
         let device = get_default_output_device(&host)?;
         let config = get_default_output_config(&device)?;
 
-        Ok(Metronome {
+        Ok(Self {
             bpm,
             beats_per_measure,
             is_playing: Arc::new(AtomicBool::new(false)),
@@ -88,7 +102,7 @@ impl Metronome {
         device: Device,
         config: StreamConfig,
     ) -> Self {
-        Metronome {
+        Self {
             bpm,
             beats_per_measure,
             is_playing: Arc::new(AtomicBool::new(false)),
@@ -102,41 +116,53 @@ impl Metronome {
     }
 
     /// Gets the current BPM.
-    pub fn bpm(&self) -> f64 {
+    #[must_use]
+    pub const fn bpm(&self) -> f64 {
         self.bpm
     }
 
     /// Sets the BPM.
-    pub fn set_bpm(&mut self, bpm: f64) {
+    pub const fn set_bpm(&mut self, bpm: f64) {
         self.bpm = bpm;
     }
 
     /// Gets the beats per measure.
-    pub fn beats_per_measure(&self) -> Option<u32> {
+    #[must_use]
+    pub const fn beats_per_measure(&self) -> Option<u32> {
         self.beats_per_measure
     }
 
     /// Sets the beats per measure.
-    pub fn set_beats_per_measure(&mut self, beats_per_measure: Option<u32>) {
+    pub const fn set_beats_per_measure(&mut self, beats_per_measure: Option<u32>) {
         self.beats_per_measure = beats_per_measure;
     }
 
     /// Gets the accent configuration.
-    pub fn accent_config(&self) -> &AccentConfig {
+    #[must_use]
+    pub const fn accent_config(&self) -> &AccentConfig {
         &self.accent_config
     }
 
     /// Sets the accent configuration.
-    pub fn set_accent_config(&mut self, accent_config: AccentConfig) {
+    pub const fn set_accent_config(&mut self, accent_config: AccentConfig) {
         self.accent_config = accent_config;
     }
 
     /// Checks if the metronome is currently playing.
+    #[must_use]
     pub fn is_playing(&self) -> bool {
         self.is_playing.load(Ordering::Relaxed)
     }
 
     /// Starts the metronome. This will stop any currently playing metronome globally.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue with thread creation or other system resources.
+    ///
+    /// # Panics
+    ///
+    /// May panic if the global metronome mutex is poisoned due to a previous panic in another thread.
     pub fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
         // Stop any currently playing metronome
         let current_metronome = {
@@ -179,16 +205,15 @@ impl Metronome {
 
     /// Internal method that runs the metronome loop.
     fn run_metronome(&self) {
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let beat_duration_ms = (60.0 / self.bpm * 1000.0) as u64;
-        let subdivision_duration_ms = beat_duration_ms / self.accent_config.subdivisions as u64;
+        let subdivision_duration_ms = beat_duration_ms / u64::from(self.accent_config.subdivisions);
         let mut beat_count = 0u32;
         let mut subdivision_count = 0u32;
 
         while self.is_playing.load(Ordering::Relaxed) {
-            let is_accent = match self.beats_per_measure {
-                Some(beats) => beat_count % beats == 0 && subdivision_count == 0,
-                None => false,
-            };
+            let is_accent = self.beats_per_measure
+                .is_some_and(|beats| beat_count % beats == 0 && subdivision_count == 0);
 
             let is_main_beat = subdivision_count == 0;
 
@@ -235,7 +260,7 @@ impl Metronome {
                 wave_type,
                 volume,
             ) {
-                eprintln!("Error playing metronome click: {}", e);
+                eprintln!("Error playing metronome click: {e}");
                 break;
             }
 
@@ -255,6 +280,10 @@ impl Metronome {
 }
 
 /// Stops any currently playing metronome globally.
+///
+/// # Panics
+///
+/// May panic if the global metronome mutex is poisoned due to a previous panic in another thread.
 pub fn stop_global_metronome() {
     let metronome = {
         let mut global = GLOBAL_METRONOME.lock().unwrap();
@@ -300,6 +329,10 @@ pub fn get_global_metronome() -> Option<Arc<Metronome>> {
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+///
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_simple_metronome(bpm: f64) -> Result<(), Box<dyn std::error::Error>> {
     let metronome = Metronome::new(bpm, None)?;
     metronome.start()
@@ -335,6 +368,10 @@ pub fn start_simple_metronome(bpm: f64) -> Result<(), Box<dyn std::error::Error>
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+///
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_metronome_with_time_signature(
     bpm: f64,
     beats_per_measure: u32,
@@ -370,6 +407,9 @@ pub fn start_metronome_with_time_signature(
 /// play_metronome_for_duration(90.0, Some(3), 10000)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn play_metronome_for_duration(
     bpm: f64,
     beats_per_measure: Option<u32>,
@@ -418,6 +458,9 @@ pub fn play_metronome_for_duration(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_custom_metronome(
     bpm: f64,
     beats_per_measure: Option<u32>,
@@ -453,6 +496,9 @@ pub fn start_custom_metronome(
 /// play_custom_metronome_for_duration(100.0, Some(4), strong_config, 8000)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn play_custom_metronome_for_duration(
     bpm: f64,
     beats_per_measure: Option<u32>,
@@ -493,6 +539,9 @@ pub fn play_custom_metronome_for_duration(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_practice_metronome(
     bpm: f64,
     beats_per_measure: u32,
@@ -527,6 +576,9 @@ pub fn start_practice_metronome(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_performance_metronome(
     bpm: f64,
     beats_per_measure: u32,
@@ -560,6 +612,9 @@ pub fn start_performance_metronome(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_metronome_with_eighth_notes(
     bpm: f64,
     beats_per_measure: Option<u32>,
@@ -593,6 +648,9 @@ pub fn start_metronome_with_eighth_notes(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_metronome_with_sixteenth_notes(
     bpm: f64,
     beats_per_measure: Option<u32>,
@@ -626,6 +684,9 @@ pub fn start_metronome_with_sixteenth_notes(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_metronome_with_triplets(
     bpm: f64,
     beats_per_measure: Option<u32>,
@@ -661,6 +722,9 @@ pub fn start_metronome_with_triplets(
 /// stop_global_metronome();
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+/// # Errors
+///
+/// Returns an error if the audio device or configuration cannot be obtained, or if there's an issue starting the metronome.
 pub fn start_metronome_with_subdivisions(
     bpm: f64,
     beats_per_measure: Option<u32>,

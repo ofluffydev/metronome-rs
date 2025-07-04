@@ -1,7 +1,7 @@
 use metronome_rs::{
-    play_custom_metronome_for_duration, play_metronome_for_duration, start_custom_metronome,
-    start_metronome_with_time_signature, start_performance_metronome, start_practice_metronome,
-    start_simple_metronome, stop_global_metronome, AccentConfig, WaveType,
+    AccentConfig, WaveType, play_custom_metronome_for_duration, play_metronome_for_duration,
+    start_custom_metronome, start_metronome_with_time_signature, start_performance_metronome,
+    start_practice_metronome, start_simple_metronome, stop_global_metronome,
 };
 use std::thread;
 use std::time::Duration;

@@ -1,4 +1,4 @@
-use metronome_rs::{stop_global_metronome, Metronome};
+use metronome_rs::{Metronome, stop_global_metronome};
 use std::thread;
 use std::time::Duration;
 
@@ -17,7 +17,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Creating second metronome at 160 BPM...");
     let metronome2 = Metronome::new(160.0, Some(3))?;
     metronome2.start()?;
-    println!("Second metronome started (160 BPM with measures). The first metronome should have stopped automatically.");
+    println!(
+        "Second metronome started (160 BPM with measures). The first metronome should have stopped automatically."
+    );
     println!("You should now hear faster beats with accents every 3 beats.");
 
     // Play for 4 seconds

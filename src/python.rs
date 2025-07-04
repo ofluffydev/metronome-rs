@@ -1,4 +1,4 @@
-//! Python bindings for metronome-rs using PyO3
+//! Python bindings for metronome-rs using `PyO3`
 //!
 //! This module provides Python bindings for the metronome library, allowing
 //! Python code to use the metronome functionality.
@@ -42,36 +42,36 @@ impl PyWaveType {
             _ => {
                 return Err(pyo3::exceptions::PyValueError::new_err(
                     "Invalid wave type. Must be one of: 'sine', 'square', 'sawtooth', 'triangle'",
-                ))
+                ));
             }
         };
-        Ok(PyWaveType { inner })
+        Ok(Self { inner })
     }
 
     #[staticmethod]
-    fn sine() -> Self {
-        PyWaveType {
+    const fn sine() -> Self {
+        Self {
             inner: WaveType::Sine,
         }
     }
 
     #[staticmethod]
-    fn square() -> Self {
-        PyWaveType {
+    const fn square() -> Self {
+        Self {
             inner: WaveType::Square,
         }
     }
 
     #[staticmethod]
-    fn sawtooth() -> Self {
-        PyWaveType {
+    const fn sawtooth() -> Self {
+        Self {
             inner: WaveType::Sawtooth,
         }
     }
 
     #[staticmethod]
-    fn triangle() -> Self {
-        PyWaveType {
+    const fn triangle() -> Self {
+        Self {
             inner: WaveType::Triangle,
         }
     }
@@ -97,8 +97,39 @@ pub struct PyAccentConfig {
 #[pymethods]
 impl PyAccentConfig {
     #[new]
-    #[pyo3(signature = (accent_frequency=880.0, regular_frequency=440.0, accent_duration=150, regular_duration=100, accent_wave_type=None, regular_wave_type=None, subdivisions=1, subdivision_frequency=523.25, subdivision_duration=80, subdivision_wave_type=None, subdivision_volume=0.7))]
+    #[pyo3(signature = (accent_frequency=880.0, regular_frequency=440.0, accent_duration=150, regular_duration=100, accent_wave_type=None, regular_wave_type=None))]
     fn new(
+        accent_frequency: f32,
+        regular_frequency: f32,
+        accent_duration: u64,
+        regular_duration: u64,
+        accent_wave_type: Option<PyWaveType>,
+        regular_wave_type: Option<PyWaveType>,
+    ) -> Self {
+        let accent_wave = accent_wave_type.map_or(WaveType::Sine, |w| w.inner);
+        let regular_wave = regular_wave_type.map_or(WaveType::Sine, |w| w.inner);
+
+        Self {
+            inner: AccentConfig {
+                accent_frequency,
+                regular_frequency,
+                accent_duration,
+                regular_duration,
+                accent_wave_type: accent_wave,
+                regular_wave_type: regular_wave,
+                subdivisions: 1,
+                subdivision_frequency: 523.25,
+                subdivision_duration: 80,
+                subdivision_wave_type: WaveType::Sine,
+                subdivision_volume: 0.7,
+            },
+        }
+    }
+
+    #[staticmethod]
+    #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (accent_frequency=880.0, regular_frequency=440.0, accent_duration=150, regular_duration=100, accent_wave_type=None, regular_wave_type=None, subdivisions=1, subdivision_frequency=523.25, subdivision_duration=80, subdivision_wave_type=None, subdivision_volume=0.7))]
+    fn new_with_subdivisions(
         accent_frequency: f32,
         regular_frequency: f32,
         accent_duration: u64,
@@ -111,17 +142,12 @@ impl PyAccentConfig {
         subdivision_wave_type: Option<PyWaveType>,
         subdivision_volume: f32,
     ) -> Self {
-        let accent_wave = accent_wave_type
-            .map(|w| w.inner)
-            .unwrap_or(WaveType::Sine);
-        let regular_wave = regular_wave_type
-            .map(|w| w.inner)
-            .unwrap_or(WaveType::Sine);
+        let accent_wave = accent_wave_type.map_or(WaveType::Sine, |w| w.inner);
+        let regular_wave = regular_wave_type.map_or(WaveType::Sine, |w| w.inner);
         let subdivision_wave = subdivision_wave_type
-            .map(|w| w.inner)
-            .unwrap_or(WaveType::Sine);
+            .map_or(WaveType::Sine, |w| w.inner);
 
-        PyAccentConfig {
+        Self {
             inner: AccentConfig {
                 accent_frequency,
                 regular_frequency,
@@ -140,67 +166,67 @@ impl PyAccentConfig {
 
     #[staticmethod]
     fn default() -> Self {
-        PyAccentConfig {
+        Self {
             inner: AccentConfig::default(),
         }
     }
 
     #[staticmethod]
-    fn subtle() -> Self {
-        PyAccentConfig {
+    const fn subtle() -> Self {
+        Self {
             inner: AccentConfig::subtle(),
         }
     }
 
     #[staticmethod]
-    fn strong() -> Self {
-        PyAccentConfig {
+    const fn strong() -> Self {
+        Self {
             inner: AccentConfig::strong(),
         }
     }
 
     #[staticmethod]
     fn with_wave_type(wave_type: PyWaveType) -> Self {
-        PyAccentConfig {
+        Self {
             inner: AccentConfig::with_wave_type(wave_type.inner),
         }
     }
 
     #[staticmethod]
-    fn with_wave_types(accent_wave: PyWaveType, regular_wave: PyWaveType) -> Self {
-        PyAccentConfig {
+    const fn with_wave_types(accent_wave: PyWaveType, regular_wave: PyWaveType) -> Self {
+        Self {
             inner: AccentConfig::with_wave_types(accent_wave.inner, regular_wave.inner),
         }
     }
 
     #[staticmethod]
-    fn with_eighth_notes() -> Self {
-        PyAccentConfig {
+    const fn with_eighth_notes() -> Self {
+        Self {
             inner: AccentConfig::with_eighth_notes(),
         }
     }
 
     #[staticmethod]
-    fn with_sixteenth_notes() -> Self {
-        PyAccentConfig {
+    const fn with_sixteenth_notes() -> Self {
+        Self {
             inner: AccentConfig::with_sixteenth_notes(),
         }
     }
 
     #[staticmethod]
-    fn with_triplets() -> Self {
-        PyAccentConfig {
+    const fn with_triplets() -> Self {
+        Self {
             inner: AccentConfig::with_triplets(),
         }
     }
 
     #[staticmethod]
-    fn with_custom_subdivisions(
+    const fn with_custom_subdivisions(
         subdivisions: u32,
         subdivision_frequency: f32,
         subdivision_volume: f32,
     ) -> Self {
-        PyAccentConfig {
+        Self {
             inner: AccentConfig::with_custom_subdivisions(
                 subdivisions,
                 subdivision_frequency,
@@ -210,25 +236,25 @@ impl PyAccentConfig {
     }
 
     fn set_subdivisions(&mut self, subdivisions: u32) -> Self {
-        PyAccentConfig {
+        Self {
             inner: self.inner.clone().set_subdivisions(subdivisions),
         }
     }
 
     fn set_subdivision_frequency(&mut self, frequency: f32) -> Self {
-        PyAccentConfig {
+        Self {
             inner: self.inner.clone().set_subdivision_frequency(frequency),
         }
     }
 
     fn set_subdivision_volume(&mut self, volume: f32) -> Self {
-        PyAccentConfig {
+        Self {
             inner: self.inner.clone().set_subdivision_volume(volume),
         }
     }
 
     fn set_subdivision_wave_type(&mut self, wave_type: PyWaveType) -> Self {
-        PyAccentConfig {
+        Self {
             inner: self
                 .inner
                 .clone()
@@ -237,48 +263,50 @@ impl PyAccentConfig {
     }
 
     #[getter]
-    fn accent_frequency(&self) -> f32 {
+    const fn accent_frequency(&self) -> f32 {
         self.inner.accent_frequency
     }
 
     #[getter]
-    fn regular_frequency(&self) -> f32 {
+    const fn regular_frequency(&self) -> f32 {
         self.inner.regular_frequency
     }
 
     #[getter]
-    fn accent_duration(&self) -> u64 {
+    const fn accent_duration(&self) -> u64 {
         self.inner.accent_duration
     }
 
     #[getter]
-    fn regular_duration(&self) -> u64 {
+    const fn regular_duration(&self) -> u64 {
         self.inner.regular_duration
     }
 
     #[getter]
-    fn subdivisions(&self) -> u32 {
+    const fn subdivisions(&self) -> u32 {
         self.inner.subdivisions
     }
 
     #[getter]
-    fn subdivision_frequency(&self) -> f32 {
+    const fn subdivision_frequency(&self) -> f32 {
         self.inner.subdivision_frequency
     }
 
     #[getter]
-    fn subdivision_duration(&self) -> u64 {
+    const fn subdivision_duration(&self) -> u64 {
         self.inner.subdivision_duration
     }
 
     #[getter]
-    fn subdivision_volume(&self) -> f32 {
+    const fn subdivision_volume(&self) -> f32 {
         self.inner.subdivision_volume
     }
 
     fn __str__(&self) -> String {
-        format!("PyAccentConfig(accent_freq={}, regular_freq={}, subdivisions={})", 
-                self.inner.accent_frequency, self.inner.regular_frequency, self.inner.subdivisions)
+        format!(
+            "PyAccentConfig(accent_freq={}, regular_freq={}, subdivisions={})",
+            self.inner.accent_frequency, self.inner.regular_frequency, self.inner.subdivisions
+        )
     }
 }
 
@@ -286,7 +314,9 @@ impl PyAccentConfig {
 /// Play a simple beep sound
 #[pyfunction]
 fn py_beep() -> PyResult<()> {
-    beep().map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play beep: {}", e)))
+    beep().map_err(|e| {
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play beep: {e}"))
+    })
 }
 
 #[cfg(feature = "python")]
@@ -294,7 +324,7 @@ fn py_beep() -> PyResult<()> {
 #[pyfunction]
 fn py_beep_frequency(frequency: f32) -> PyResult<()> {
     beep_frequency(frequency).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play beep: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play beep: {e}"))
     })
 }
 
@@ -303,7 +333,7 @@ fn py_beep_frequency(frequency: f32) -> PyResult<()> {
 #[pyfunction]
 fn py_start_simple_metronome(bpm: f64) -> PyResult<()> {
     start_simple_metronome(bpm).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -312,7 +342,7 @@ fn py_start_simple_metronome(bpm: f64) -> PyResult<()> {
 #[pyfunction]
 fn py_start_metronome_with_time_signature(bpm: f64, beats_per_measure: u32) -> PyResult<()> {
     start_metronome_with_time_signature(bpm, beats_per_measure).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -321,7 +351,7 @@ fn py_start_metronome_with_time_signature(bpm: f64, beats_per_measure: u32) -> P
 #[pyfunction]
 fn py_start_practice_metronome(bpm: f64, beats_per_measure: u32) -> PyResult<()> {
     start_practice_metronome(bpm, beats_per_measure).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -330,7 +360,7 @@ fn py_start_practice_metronome(bpm: f64, beats_per_measure: u32) -> PyResult<()>
 #[pyfunction]
 fn py_start_performance_metronome(bpm: f64, beats_per_measure: u32) -> PyResult<()> {
     start_performance_metronome(bpm, beats_per_measure).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -343,7 +373,7 @@ fn py_start_custom_metronome(
     accent_config: PyAccentConfig,
 ) -> PyResult<()> {
     start_custom_metronome(bpm, beats_per_measure, accent_config.inner).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -352,7 +382,7 @@ fn py_start_custom_metronome(
 #[pyfunction]
 fn py_start_metronome_with_eighth_notes(bpm: f64, beats_per_measure: u32) -> PyResult<()> {
     start_metronome_with_eighth_notes(bpm, Some(beats_per_measure)).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -361,7 +391,7 @@ fn py_start_metronome_with_eighth_notes(bpm: f64, beats_per_measure: u32) -> PyR
 #[pyfunction]
 fn py_start_metronome_with_sixteenth_notes(bpm: f64, beats_per_measure: u32) -> PyResult<()> {
     start_metronome_with_sixteenth_notes(bpm, Some(beats_per_measure)).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -370,7 +400,7 @@ fn py_start_metronome_with_sixteenth_notes(bpm: f64, beats_per_measure: u32) -> 
 #[pyfunction]
 fn py_start_metronome_with_triplets(bpm: f64, beats_per_measure: u32) -> PyResult<()> {
     start_metronome_with_triplets(bpm, Some(beats_per_measure)).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
     })
 }
 
@@ -383,10 +413,15 @@ fn py_start_metronome_with_subdivisions(
     subdivisions: u32,
     subdivision_volume: f32,
 ) -> PyResult<()> {
-    start_metronome_with_subdivisions(bpm, Some(beats_per_measure), subdivisions, subdivision_volume)
-        .map_err(|e| {
-            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {}", e))
-        })
+    start_metronome_with_subdivisions(
+        bpm,
+        Some(beats_per_measure),
+        subdivisions,
+        subdivision_volume,
+    )
+    .map_err(|e| {
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to start metronome: {e}"))
+    })
 }
 
 #[cfg(feature = "python")]
@@ -398,7 +433,7 @@ fn py_play_metronome_for_duration(
     duration_ms: u64,
 ) -> PyResult<()> {
     play_metronome_for_duration(bpm, beats_per_measure, duration_ms).map_err(|e| {
-        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play metronome: {}", e))
+        pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play metronome: {e}"))
     })
 }
 
@@ -413,7 +448,7 @@ fn py_play_custom_metronome_for_duration(
 ) -> PyResult<()> {
     play_custom_metronome_for_duration(bpm, beats_per_measure, accent_config.inner, duration_ms)
         .map_err(|e| {
-            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play metronome: {}", e))
+            pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to play metronome: {e}"))
         })
 }
 
@@ -444,7 +479,10 @@ fn metronome_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Subdivision functions
     m.add_function(wrap_pyfunction!(py_start_metronome_with_eighth_notes, m)?)?;
-    m.add_function(wrap_pyfunction!(py_start_metronome_with_sixteenth_notes, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        py_start_metronome_with_sixteenth_notes,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(py_start_metronome_with_triplets, m)?)?;
     m.add_function(wrap_pyfunction!(py_start_metronome_with_subdivisions, m)?)?;
 

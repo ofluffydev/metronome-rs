@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "metronome-rs"
-version = "0.1.0"
+version = "1.1.0"
 description = "A metronome library with audio beep functionality"
 license = {text = "MIT OR Apache-2.0"}
 requires-python = ">=3.8"
